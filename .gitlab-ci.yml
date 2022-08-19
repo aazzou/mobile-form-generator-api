@@ -1,0 +1,26 @@
+default:
+  image: ruby:2.6.3
+
+before_script:
+  - ruby -v
+  - which ruby
+  - gem install bundler --no-document
+  - bundle install --quiet
+
+deploy_application:
+  stage: deploy
+  before_script:
+    - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - echo -e "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  script:
+    - gem install capistrano
+    - gem install capistrano-rails
+    - gem install capistrano-passenger
+    - gem install capistrano-rbenv
+    - cap production deploy
+  only:
+    - master
